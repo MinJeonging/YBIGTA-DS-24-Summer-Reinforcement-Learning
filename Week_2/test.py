@@ -4,7 +4,7 @@ import torch
 from assets import DQN, device
 
 def test(args):
-    env = gym.make('LunarLander-v2', render_mode='human')
+    env = gym.make('LunarLander-v2', render_mode=None)
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
     policy_net = DQN(state_size, action_size).to(device)

@@ -14,49 +14,37 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Transition을 저장하기 위한 namedtuple입니다! 아래 ReplayMemory 클래스에서 사용해요. 
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
 
-'''
-gymnasium은 stable_baseline으로 간단하게 구현할 수 있지만, 
-상황에 따라 직접 DQN과 같은 Agent의 구성요소를 구현할 수도 있고,
-Custom Environment를 만들어서 사용할 수도 있습니다. 
-
-DQN에선 Action 후 State, action, next_state, reward 등을 저장하는 ReaplyMemory를 사용하고, 
-Q-network를 신경망으로 근사해 사용합니다. 또한 Target Network와 Q - Network를 구분해 학습을 안정화시킵니다. 
-
-이번 과제에선 env를 구현하진 않고, DQN의 구성요소들 중 Q-network와 ReplayMemory를 구현해보겠습니다.
-
-ReplayMemory는 deque를 사용해 구현하면 되고, 
-
-DQN은 nn.Module을 상속받아 구현하시면 됩니다. 필요한 메소드는 정해두었으니 참고하시면 됩니다! 
-'''
-
 ####### 여기서부터 코드를 작성하세요 #######
 # ReplayMemory 클래스를 구현해주세요!
 class ReplayMemory:
     def __init__(self, capacity):
-        pass
+        self.memory = deque([], maxlen=capacity)
 
     def push(self, *args):
         """Transition 저장"""
-        pass
+        self.memory.append(Transition(*args))
 
     def sample(self, batch_size):
-        pass
+        return random.sample(self.memory, batch_size)
 
     def __len__(self):
-        pass
+        return len(self.memory)
     
-
-# DQN 모델을 구현해주세요! Atari Game에선 CNN 모듈을 사용하지만, 구현은 간단하게 MLP로 해도 됩니다. 성능을 비교해보며 자유로이 구현해보세요! 
+# DQN 모델을 구현해주세요! 
 class DQN(nn.Module):
-    def __init__(self, n_observations, n_actions):
+    def __init__(self, n_observations, n_actions, n_hidden=64):
         super(DQN, self).__init__()
-        pass
+        self.fc = nn.Sequential(
+            nn.Linear(n_observations, n_hidden),
+            nn.ReLU(),
+            nn.Linear(n_hidden, n_hidden),
+            nn.ReLU(),
+            nn.Linear(n_hidden, n_actions)
+        )
 
     def forward(self, x):
-        pass
-
+        return self.fc(x)
 ####### 여기까지 코드를 작성하세요 #######
-
 
 class DQNAgent:
     def __init__(self, state_size, action_size, eps_start, eps_end, eps_decay, gamma, lr, batch_size, tau):

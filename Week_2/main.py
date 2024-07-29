@@ -6,7 +6,7 @@ from tqdm import tqdm
 from assets import DQNAgent, device
 
 def main(args):
-    env = gym.make('LunarLander-v2', render_mode='human')
+    env = gym.make('LunarLander-v2', render_mode=None)
     state_size = env.observation_space.shape[0]
     
     if isinstance(env.action_space, gym.spaces.Discrete):
@@ -69,15 +69,15 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--episodes', type=int, default=100, help='Number of episodes to train the agent')
+    parser.add_argument('--episodes', type=int, default=320, help='Number of episodes to train the agent')
     parser.add_argument('--eps_start', type=float, default=0.9, help='Starting value of epsilon for epsilon-greedy policy')
     parser.add_argument('--eps_end', type=float, default=0.05, help='Ending value of epsilon for epsilon-greedy policy')
     parser.add_argument('--eps_decay', type=int, default=200, help='Epsilon decay factor')
     parser.add_argument('--gamma', type=float, default=0.99, help='Discount factor')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
-    parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training')
-    parser.add_argument('--tau', type=float, default=0.005, help='Soft update coefficient for target network')
+    parser.add_argument('--batch_size', type=int, default=128, help='Batch size for training')
+    parser.add_argument('--tau', type=float, default=0.001, help='Soft update coefficient for target network')
     parser.add_argument('--target_update', type=int, default=10, help='Number of episodes between target network updates')
-    parser.add_argument('--save_path', type=str, default='dqn_lunarlander.pth', help='Path to save the trained model')
+    parser.add_argument('--save_path', type=str, default='Robocar_Poli.pth', help='Path to save the trained model')
     args = parser.parse_args()
     main(args)
