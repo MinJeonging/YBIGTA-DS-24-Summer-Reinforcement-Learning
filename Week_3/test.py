@@ -66,6 +66,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--max_timesteps", type=int, default=1500, help="Maximum timesteps per episode")
     parser.add_argument("--seed", type=int, default=0, help="Random seed")
-    parser.add_argument("--model_path", type=str, default="ppo_hopper.pth", help="Path to the saved model")
+    parser.add_argument("--model_path", type=str, default="Robocar_Poli.pth", help="Path to the saved model")
     args = parser.parse_args()
     test(args)

@@ -10,15 +10,12 @@ from typing import Tuple, List
 class PolicyNetwork(nn.Module):
     def __init__(self, state_dim: int, action_dim: int, hidden_dims: Tuple[int, int] = (64, 64), activation_fn: nn.Module = F.tanh):
         super(PolicyNetwork, self).__init__()
-        ########################################
-        '''TODO: 정책 신경망을 구현하세요! 원래는 두개 다 비우려고 했는데... 생각해보니까 아직 Actor Critic을 하지 않아서... 신경망을 만드는 건 다들 잘 하시니까~
-        self.input_layer = 
-        self.hidden_layers = 
-        self.mu_layer = 
-        self.log_std_layer = 
+        self.input_layer = nn.Linear(state_dim, hidden_dims[0])
+        self.hidden_layers = nn.ModuleList([nn.Linear(hidden_dims[i], hidden_dims[i+1]) for i in range(len(hidden_dims)-1)])
+        self.mu_layer = nn.Linear(hidden_dims[-1], action_dim)
+        self.log_std_layer = nn.Linear(hidden_dims[-1], action_dim)
         self.activation_fn = activation_fn
-        '''
-        ########################################
+
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         x = self.activation_fn(self.input_layer(x))
         for layer in self.hidden_layers:
@@ -32,15 +29,11 @@ class PolicyNetwork(nn.Module):
 class ValueNetwork(nn.Module):
     def __init__(self, state_dim: int, hidden_dims: Tuple[int, int] = (64, 64), activation_fn: nn.Module = F.tanh):
         super(ValueNetwork, self).__init__()
-        ########################################
-        '''TODO: 가치 신경망을 구현하세요! 
-        self.input_layer = 
-        self.hidden_layers = 
-        self.output_layer = 
-        self.activation_fn = 
-        '''
-        ########################################
-        
+        self.input_layer = nn.Linear(state_dim, hidden_dims[0])
+        self.hidden_layers = nn.ModuleList([nn.Linear(hidden_dims[i], hidden_dims[i+1]) for i in range(len(hidden_dims)-1)])
+        self.output_layer = nn.Linear(hidden_dims[-1], 1)
+        self.activation_fn = activation_fn
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.activation_fn(self.input_layer(x))
         for layer in self.hidden_layers:
@@ -49,26 +42,29 @@ class ValueNetwork(nn.Module):
         return x
 
 # 경험 버퍼 (Experience Buffer)
-# 지난번에 보았던 Buffer와 같은 기능을 합니다! 
-
 class ExperienceBuffer:
     def __init__(self):
         self.buffer: List[Tuple[np.ndarray, np.ndarray, float, np.ndarray, bool]] = []
 
     def store(self, transition: Tuple[np.ndarray, np.ndarray, float, np.ndarray, bool]) -> None:
-        '''TODO'''
-        pass
-    def sample(self) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
-        '''TODO'''
+        self.buffer.append(transition)
 
-        pass
+    def sample(self) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
+        states, actions, rewards, next_states, dones = zip(*self.buffer)
+        self.buffer = []
+        return (
+            torch.FloatTensor(states),
+            torch.FloatTensor(actions),
+            torch.FloatTensor(rewards),
+            torch.FloatTensor(next_states),
+            torch.FloatTensor(dones)
+        )
 
     @property
     def size(self) -> int:
         return len(self.buffer)
 
 # PPO 알고리즘 (PPO Algorithm)
-# PPO의 장점은 TRPO와 다르게 간단하게 clipping으로 구현이 가능하다는 점에 있습니다. 아래를 잘보고 빈칸을 잘 채워주세요! 
 class PPO:
     def __init__(
         self,
@@ -148,13 +144,12 @@ class PPO:
                 log_prob = dist.log_prob(torch.atanh(a_batch)).sum(dim=-1, keepdim=True)
                 ratio = (log_prob - log_prob_old_batch).exp()
 
-                '''TODO : 이부분을 채워주세요! Hint : Clipping을 사용해주세요~
-                surr1 = 
-                surr2 = 
+                surr1 = ratio * adv_batch
+                surr2 = torch.clamp(ratio, 1.0 - self.clip_ratio, 1.0 + self.clip_ratio) * adv_batch
                 policy_loss = -torch.min(surr1, surr2).mean()
                 entropy_bonus = dist.entropy().mean()
-                loss = 
-                '''
+                loss = policy_loss + self.vf_coef * value_loss - self.ent_coef * entropy_bonus
+
                 self.policy_optimizer.zero_grad()
                 self.value_optimizer.zero_grad()
                 loss.backward()
